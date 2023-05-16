@@ -1,0 +1,73 @@
+import qrcode
+from PIL import Image, ImageDraw, ImageFont
+import pandas as pd
+
+#Ignorar error deprecation
+
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+
+# Importamos la base de datos
+
+df = pd.read_excel(r"C:\Users\felipe\OneDrive\Escritorio\ENCUENTRO MUNDIAL\BASE DE DATOS.xlsx", sheet_name='COMUNICACIONES')
+
+#Recorrrido Data Frame
+
+for index, row in df.iterrows():
+    #print(row['NOMBRE'], row['CARGO'])
+    nombre = str(row['NOMBRE'])
+    cargo = str(row['CARGO'])
+    infoqr = nombre + " " + cargo
+
+    # Creamos el objeto QRCode con la información que queremos codificar
+    qr = qrcode.QRCode(version=None, error_correction=qrcode.constants.ERROR_CORRECT_L, box_size=10, border=1)
+    qr.add_data(infoqr)
+    qr.make(fit=True)
+
+    # Creamos la imagen QR y la guardamos en un objeto de imagen PIL
+    qr_image = qr.make_image(fill_color="black", back_color="white").resize((300, 300))
+
+    # Creamos una imagen en blanco del tamaño deseado
+    width, height = 800, 300
+    image = Image.new(mode="RGB", size=(width, height), color=(255, 255, 255))
+
+    # Pegamos la imagen del código QR en la esquina superior izquierda de la imagen en blanco
+    image.paste(qr_image, (0, 0))
+
+    # crear una imagen de 5cm por 3cm de alto
+    width, height = 500, 300 # 5cm x 3cm = 150 x 90 pixels
+    image1 = Image.new("RGB", (width, height), color=(255, 255, 255))
+
+    # crear un objeto ImageDraw
+    draw = ImageDraw.Draw(image1)
+
+    # agregar texto a la imagen
+    text = f"{nombre.upper()}\n{cargo}"
+    font_size = 200
+    font = ImageFont.truetype("arial.ttf", font_size)
+    textwidth, textheight = draw.textsize(text, font)
+    while textwidth > width or textheight > height:
+        font_size -= 1
+        font = ImageFont.truetype("arial.ttf", font_size)
+        textwidth, textheight = draw.textsize(text, font)
+    x = (width - textwidth) / 2
+    y = (height - textheight) / 2
+    draw.text((x, y), text, fill=(0, 0, 0), font=font)
+
+    # Pegamos la imagen del código QR en la esquina superior izquierda de la imagen en blanco
+    image.paste(image1, (300, 0))
+
+    # guardar la imagen en un archivo
+    image.save(f"{row['NOMBRE']}.png")
+
+# Imprimir el DataFrame
+
+#print(df)
+#print(df.columns)
+#print(df.head(20))
+
+print(df.describe)
+
+
+
